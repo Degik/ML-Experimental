@@ -27,3 +27,6 @@ class NeuralNetworkLayer(nn.Module):
         x = self.sigmoid(x)
 
         return x
+
+def createNet(input_size:int, hidden_size:int, output_size:int) -> NeuralNetworkLayer:
+    return NeuralNetworkLayer(input_size, hidden_size, output_size)
