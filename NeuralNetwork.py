@@ -1,5 +1,3 @@
-import numpy
-import torch
 import torch.nn as nn
 
 class NeuralNetworkLayer(nn.Module):
