@@ -8,10 +8,10 @@ class NeuralNetworkLayer(nn.Module):
         self.layer1 = nn.Linear(input_size, hidden_size)
         self.relu1 = nn.ReLU()
 
-        self.layer2 = nn.Linear(input_size, hidden_size)
+        self.layer2 = nn.Linear(hidden_size, hidden_size)
         self.relu2 = nn.ReLU()
 
-        self.layer3 = nn.Linear(input_size, hidden_size)
+        self.layer3 = nn.Linear(input_size, output_size)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):

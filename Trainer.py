@@ -15,7 +15,7 @@ class Trainer:
         #Save net inside trainer
         self.net = net
         #Train Criterion
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.criterion = nn.CrossEntropyLoss()
 
         #Optimizer
         learning_rate = 0.1 #To see

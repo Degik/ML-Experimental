@@ -3,6 +3,7 @@ import parserData as prd
 import NeuralNetwork as nt
 from manageTensor import createTensor
 from argumentParser import argumentParser
+from torch.utils.data import TensorDataset, DataLoader
 
 #Net settings
 input_size=10
@@ -28,14 +29,19 @@ tensor_output = createTensor(dataset_output)
 net = net.double()
 tensor_input = tensor_input.double()
 tensor_output = tensor_output.double()
+#Create tensorDataset for use TenserDataset
+tensor_dataset = TensorDataset(tensor_input, tensor_output)
+# Create data loader, is important for use batch computing inside of traning loop
+data_loader = DataLoader(tensor_dataset, batch_size=trainer.batch, shuffle=True)
 #Training loop
 for epoch in range(trainer.epochs):
-    #Forward pass
-    outputs = net(tensor_input)
-    #Training loss
-    loss = trainer.criterion(outputs, tensor_output)
-    #Backward and optimization
-    trainer.optimizer.zero_grad()
-    loss.backward()
-    trainer.optimizer.step()
-    
+    for batch_input, batch_output in data_loader:
+        #Forward pass
+        outputs = net(batch_input)
+        #Training loss
+        loss = trainer.criterion(outputs, batch_output)
+        #Backward and optimization
+        trainer.optimizer.zero_grad()
+        loss.backward()
+        trainer.optimizer.step()
+        print(f"Epoch:{epoch} loss:{loss.item()}")
