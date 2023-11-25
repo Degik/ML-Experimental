@@ -1,6 +1,6 @@
 % Dataset
 data = readtable('dataset.csv');
-data = table2array(data(:, 2:end)); % Remove the frist column
+data = table2array(data(:, 2:end)); % Remove the first column
 
 % Split Dataset in input (X) and output (Y)
 X = data(:, 1:10);
