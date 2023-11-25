@@ -5,7 +5,7 @@ import NeuralNetwork as nt
 from validation import validateNet
 from argumentParser import argumentParser
 from torch.utils.data import TensorDataset, DataLoader
-from manageTensor import createTensor, createListOfTensors, moveTensorToDevice
+from manageTensor import createTensor, moveTensorToDevice
 
 #Net settings
 input_size=10
@@ -36,7 +36,6 @@ tensor_input = createTensor(dataset_input)
 tensor_output = createTensor(dataset_output)
 tensor_test = createTensor(dataset_test_input)
 tensor_target = createTensor(dataset_test_target)
-tensors_list = createListOfTensors(tensor_input,tensor_output,tensor_test,tensor_target)
 #Move tensor to selected device
 net = nt.moveNetToDevice(net, trainer.device)
 # Setting all data in double

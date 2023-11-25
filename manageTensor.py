@@ -9,12 +9,6 @@ def createTensor(dataset:pd.DataFrame) -> torch.Tensor:
         print(e)
     return tensor
 
-def createListOfTensors(*args) -> list:
-    tensorsList = []
-    for tensor in args:
-        tensorsList.append(tensor)
-    return tensorsList
-
 def moveTensorToDevice(tensor:torch.Tensor, device:str) -> torch.Tensor:
     if device is not None:
         return tensor.to(device)
