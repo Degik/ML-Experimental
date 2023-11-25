@@ -1,37 +1,37 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class NeuralNetworkLayer(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self):
         super(NeuralNetworkLayer, self).__init__()
 
-        #Definisco i layer
-        self.layer1 = nn.Linear(input_size, hidden_size)
-        self.tanh1 = nn.Tanh()
-        #self.relu1 = nn.ReLU()
-
-        self.layer2 = nn.Linear(hidden_size, hidden_size)
-        self.tanh2 = nn.Tanh()
-        #self.relu2 = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
-
-        self.layer3 = nn.Linear(input_size, output_size)
-        self.sigmoid = nn.Sigmoid()
+        #Layer 1 Input: 10 Output: 50
+        self.layer1 = nn.Linear(10, 50)
+        #Layer 2 Input: 50 Output: 100
+        self.layer2 = nn.Linear(50, 100)
+        #Layer 3 Input: 100 Output: 100
+        self.layer3 = nn.Linear(100, 100)
+        #Layer 4 Input: 100 Output: 50
+        self.layer4 = nn.Linear(100, 50)
+        #Layer 5 Input: 50 Output: 3
+        self.layer5 = nn.Linear(50, 3)
 
     def forward(self, x):
         x = self.layer1(x)
-        x = self.tanh1(x)
+        x = F.relu(x)
 
         x = self.layer2(x)
-        x = self.tanh2(x)
+        x = F.relu(x)
 
         x = self.layer3(x)
-        x = self.sigmoid(x)
+        x = F.relu(x)
 
+        x = self.layer4(x)
+        x = F.relu(x)
+
+        x = self.layer5(x)
         return x
-
-def createNet(input_size:int, hidden_size:int, output_size:int) -> NeuralNetworkLayer:
-    return NeuralNetworkLayer(input_size, hidden_size, output_size)
 
 def moveNetToDevice(net:NeuralNetworkLayer, device:str) -> NeuralNetworkLayer:
     if device is not None:

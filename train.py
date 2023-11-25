@@ -7,15 +7,12 @@ from argumentParser import argumentParser
 from torch.utils.data import TensorDataset, DataLoader
 from manageTensor import createTensor, moveTensorToDevice
 
-#Net settings
-input_size=10
-hidden_size=10
-output_size=3
+#Dataset settings
 file_path_training_set = "dataset/ML-CUP23-TR.csv"
 file_path_test_set_input = "dataset/ML-CUP23-TS.csv"
 file_path_test_set_target = "dataset/ML-CUP23-TARGET.csv"
 #Create net obj
-net = nt.createNet(input_size,hidden_size,output_size)
+net = nt.NeuralNetworkLayer()
 #Parsing arguments
 args = argumentParser()
 #Create trainer obj
@@ -59,6 +56,6 @@ for epoch in range(trainer.epochs):
         trainer.optimizer.zero_grad()
         loss.backward()
         trainer.optimizer.step()
-    print(f"Epoch:{epoch+1} loss:{loss.item()}")
+    print(f'Epoch [{epoch+1}/{trainer.epochs}], Loss: {loss.item():.4f}')
 
 #validateNet(tensor_test, tensor_target, net, trainer)
