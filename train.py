@@ -1,10 +1,11 @@
+import torch
 import Trainer as tr
 import parserData as prd
 import NeuralNetwork as nt
 from validation import validateNet
-from manageTensor import createTensor
 from argumentParser import argumentParser
 from torch.utils.data import TensorDataset, DataLoader
+from manageTensor import createTensor, createListOfTensors, moveTensorToDevice
 
 #Net settings
 input_size=10
@@ -35,6 +36,9 @@ tensor_input = createTensor(dataset_input)
 tensor_output = createTensor(dataset_output)
 tensor_test = createTensor(dataset_test_input)
 tensor_target = createTensor(dataset_test_target)
+tensors_list = createListOfTensors(tensor_input,tensor_output,tensor_test,tensor_target)
+#Move tensor to selected device
+net = nt.moveNetToDevice(net, trainer.device)
 # Setting all data in double
 net = net.double()
 tensor_input = tensor_input.double()
@@ -46,6 +50,8 @@ data_loader = DataLoader(tensor_dataset, batch_size=trainer.batch, shuffle=True)
 #Training loop
 for epoch in range(trainer.epochs):
     for batch_input, batch_output in data_loader:
+        batch_input = moveTensorToDevice(batch_input, trainer.device)
+        batch_output = moveTensorToDevice(batch_output, trainer.device)
         #Forward pass
         outputs = net(batch_input)
         #Training loss
@@ -54,6 +60,6 @@ for epoch in range(trainer.epochs):
         trainer.optimizer.zero_grad()
         loss.backward()
         trainer.optimizer.step()
-    print(f"Epoch:{epoch} loss:{loss.item()}")
+    print(f"Epoch:{epoch+1} loss:{loss.item()}")
 
 #validateNet(tensor_test, tensor_target, net, trainer)

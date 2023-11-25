@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 class NeuralNetworkLayer(nn.Module):
@@ -12,6 +13,7 @@ class NeuralNetworkLayer(nn.Module):
         self.layer2 = nn.Linear(hidden_size, hidden_size)
         self.tanh2 = nn.Tanh()
         #self.relu2 = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
 
         self.layer3 = nn.Linear(input_size, output_size)
         self.sigmoid = nn.Sigmoid()
@@ -30,3 +32,8 @@ class NeuralNetworkLayer(nn.Module):
 
 def createNet(input_size:int, hidden_size:int, output_size:int) -> NeuralNetworkLayer:
     return NeuralNetworkLayer(input_size, hidden_size, output_size)
+
+def moveNetToDevice(net:NeuralNetworkLayer, device:str) -> NeuralNetworkLayer:
+    if device is not None:
+        return net.to(device)
+    return net
