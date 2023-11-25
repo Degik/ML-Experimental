@@ -1,0 +1,49 @@
+% Dataset
+data = readtable('path_to_your_data.csv');
+data = table2array(data(:, 2:end)); % Rimuove la colonna ID
+
+% Split Dataset in input (X) and output (Y)
+X = data(:, 1:10);
+Y = data(:, 11:13); % Last 3 columns
+
+% Split in train set and test set
+cv = cvpartition(size(X, 1), 'HoldOut', 0.3);
+idx = cv.test;
+
+% TrainSet
+XTrain = X(~idx, :);
+YTrain = Y(~idx, :);
+
+% TestSet
+XTest = X(idx, :);
+YTest = Y(idx, :);
+
+% Layers definition
+layers = [ ...
+    featureInputLayer(10, 'Normalization', 'none', 'Name', 'input')
+    fullyConnectedLayer(50, 'Name', 'fc1')
+    reluLayer('Name', 'relu1')
+    fullyConnectedLayer(50, 'Name', 'fc2')
+    reluLayer('Name', 'relu2')
+    fullyConnectedLayer(3, 'Name', 'output') % 3 output
+    regressionLayer('Name', 'regressionoutput')];
+
+% Options for training
+options = trainingOptions('adam', ...
+    'MaxEpochs',100, ...
+    'MiniBatchSize', 32, ...
+    'InitialLearnRate',1e-3, ...
+    'Shuffle','every-epoch', ...
+    'Verbose',0, ...
+    'Plots','training-progress');
+
+% Training
+net = trainNetwork(XTrain, YTrain, layers, options);
+
+% Evaluation
+YPred = predict(net, XTest);
+
+% Calculate error with (MSE)
+mseError = mean((YTest - YPred).^2);
+disp('MSE Error:');
+disp(mseError);
