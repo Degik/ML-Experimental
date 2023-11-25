@@ -4,13 +4,12 @@ import torch.nn as nn
 import torch.optim as optim
 
 class Trainer:
-    def __init__(self, epochs:int, batch:int, patience:int, device:str, blind:bool, net:NeuralNetwork.NeuralNetworkLayer) -> None:
+    def __init__(self, epochs:int, batch:int, patience:int, device:str, net:NeuralNetwork.NeuralNetworkLayer) -> None:
         #Train settings
         self.epochs = epochs
         self.batch = batch
         self.patience = patience
         self.device = device
-        self.blind = blind
 
         #Save net inside trainer
         self.net = net
@@ -32,7 +31,7 @@ def createTrainer(args:dict[str, any], net) -> Trainer:
             exit(1)
 
     # Construct trainer obj with train settings
-    trainer = Trainer(args['epochs'], args['batch'], args['patience'], args['device'], args['blind'], net)
+    trainer = Trainer(args['epochs'], args['batch'], args['patience'], args['device'], net)
 
     if trainer is not None:
         return trainer

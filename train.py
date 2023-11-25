@@ -1,6 +1,7 @@
 import Trainer as tr
 import parserData as prd
 import NeuralNetwork as nt
+from validation import validateNet
 from manageTensor import createTensor
 from argumentParser import argumentParser
 from torch.utils.data import TensorDataset, DataLoader
@@ -9,22 +10,31 @@ from torch.utils.data import TensorDataset, DataLoader
 input_size=10
 hidden_size=10
 output_size=3
-file_path = "dataset/ML-CUP23-TR.csv"
+file_path_training_set = "dataset/ML-CUP23-TR.csv"
+file_path_test_set_input = "dataset/ML-CUP23-TS.csv"
+file_path_test_set_target = "dataset/ML-CUP23-TARGET.csv"
 #Create net obj
 net = nt.createNet(input_size,hidden_size,output_size)
 #Parsing arguments
 args = argumentParser()
 #Create trainer obj
 trainer = tr.createTrainer(args, net)
-#Take dataset from csv file
-dataset = prd.importDataSetCUP(file_path, trainer.blind)
+#Take dataset for training from csv file
+dataset = prd.importDataSetCUP(file_path_training_set, blind=False)
+print(dataset)
+#Take dataset for testing from csv file
+dataset_test_input = prd.importDataSetCUP(file_path_test_set_input, blind=False)
+dataset_test_target = prd.importDataSetCUPValidationTarget(file_path_test_set_target)
+#print(dataset_test_target)
 #Take dataset input information
-dataset_input = prd.takeInputDataset(dataset, trainer.blind)
+dataset_input = prd.takeInputDataset(dataset, blind=False)
 #Take dataset output information
-dataset_output = prd.takeOutputDataset(dataset, trainer.blind)
+dataset_output = prd.takeOutputDataset(dataset, blind=False)
 #Create tensor from dataset
 tensor_input = createTensor(dataset_input)
 tensor_output = createTensor(dataset_output)
+tensor_test = createTensor(dataset_test_input)
+tensor_target = createTensor(dataset_test_target)
 # Setting all data in double
 net = net.double()
 tensor_input = tensor_input.double()
@@ -44,4 +54,6 @@ for epoch in range(trainer.epochs):
         trainer.optimizer.zero_grad()
         loss.backward()
         trainer.optimizer.step()
-        print(f"Epoch:{epoch} loss:{loss.item()}")
+    print(f"Epoch:{epoch} loss:{loss.item()}")
+
+#validateNet(tensor_test, tensor_target, net, trainer)

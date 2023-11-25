@@ -6,20 +6,22 @@ class NeuralNetworkLayer(nn.Module):
 
         #Definisco i layer
         self.layer1 = nn.Linear(input_size, hidden_size)
-        self.relu1 = nn.ReLU()
+        self.tanh1 = nn.Tanh()
+        #self.relu1 = nn.ReLU()
 
         self.layer2 = nn.Linear(hidden_size, hidden_size)
-        self.relu2 = nn.ReLU()
+        self.tanh2 = nn.Tanh()
+        #self.relu2 = nn.ReLU()
 
         self.layer3 = nn.Linear(input_size, output_size)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.layer1(x)
-        x = self.relu1(x)
+        x = self.tanh1(x)
 
         x = self.layer2(x)
-        x = self.relu2(x)
+        x = self.tanh2(x)
 
         x = self.layer3(x)
         x = self.sigmoid(x)

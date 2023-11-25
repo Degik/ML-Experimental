@@ -13,6 +13,17 @@ def importDataSetCUP(file_name:str, blind:bool=False) -> pd.DataFrame:
     dataset.set_index('ID', inplace=True)
     return dataset
 
+def importDataSetCUPValidationTarget(file_name:str) -> pd.DataFrame:
+    dataset = None
+    columns_name = ["ID"] + ["X", "Y", "Z"]
+    try:
+        dataset = pd.read_csv(file_name, dtype=float, names=columns_name)
+    except Exception as e:
+        print("Error | Parsing target dataset for validation!")
+        print(e)
+    dataset.set_index('ID', inplace=True)
+    return dataset
+
 def takeInputDataset(dataset:pd.DataFrame, blind:bool=False) -> pd.DataFrame:
     #Create dataset_input and dataset output
     if not blind:
