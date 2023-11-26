@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 class NeuralNetworkLayer(nn.Module):
     def __init__(self):
@@ -37,3 +38,9 @@ def moveNetToDevice(net:NeuralNetworkLayer, device:str) -> NeuralNetworkLayer:
     if device is not None:
         return net.to(device)
     return net
+
+def printGraph(net:NeuralNetworkLayer, dataset_input:torch.Tensor) -> SummaryWriter:
+    writer = SummaryWriter('runs/my_model')
+    writer.add_graph(net, dataset_input)
+    writer.close()
+    return writer

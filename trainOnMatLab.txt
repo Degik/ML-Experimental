@@ -1,6 +1,6 @@
 % Dataset
-data = readtable('dataset.csv');
-data = table2array(data(:, 2:end)); % Remove the first column
+data = readtable('path_to_your_data.csv');
+data = table2array(data(:, 2:end)); % Rimuove la colonna ID
 
 % Split Dataset in input (X) and output (Y)
 X = data(:, 1:10);
