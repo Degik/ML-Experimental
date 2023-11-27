@@ -3,10 +3,10 @@ import Trainer as tr
 import parserData as prd
 import NeuralNetwork as nt
 from clearml import Task
-from validation import validateNet
 from argumentParser import argumentParser
 from torch.utils.data import TensorDataset, DataLoader
 from manageTensor import createTensor, moveTensorToDevice
+
 
 #Dataset settings
 file_path_training_set = "dataset/ML-CUP23-TR.csv"
@@ -30,7 +30,7 @@ trainer = tr.createTrainer(args, net)
 dataset = prd.importDataSetCUP(file_path_training_set, blind=False)
 print(dataset)
 #Take dataset for testing from csv file
-dataset_test_input = prd.importDataSetCUP(file_path_test_set_input, blind=False)
+dataset_test_input = prd.importDataSetCUP(file_path_test_set_input, blind=True)
 dataset_test_target = prd.importDataSetCUPValidationTarget(file_path_test_set_target)
 #Take dataset input information
 dataset_input = prd.takeInputDataset(dataset, blind=False)
@@ -51,13 +51,17 @@ tensor_input = tensor_input.double()
 tensor_output = tensor_output.double()
 #Create tensorDataset for use TenserDataset
 tensor_dataset = TensorDataset(tensor_input, tensor_output)
+tensor_dataset_test = TensorDataset(tensor_test, tensor_target)
 # Create data loader, is important for use batch computing inside of traning loop
 data_loader = DataLoader(tensor_dataset, batch_size=trainer.batch, shuffle=True)
+# DataLoader for validation phase
+data_loader_test = DataLoader(tensor_dataset_test, batch_size=trainer.batch, shuffle=False)
 #Draw Graph on TensorBoard
 if trainer.tensorB:
     writer = nt.printGraph(net, tensor_input.to(trainer.device))
 #Training loop
 for epoch in range(trainer.epochs):
+    total_loss = 0
     for batch_input, batch_output in data_loader:
         batch_input = moveTensorToDevice(batch_input, trainer.device)
         batch_output = moveTensorToDevice(batch_output, trainer.device)
@@ -65,18 +69,48 @@ for epoch in range(trainer.epochs):
         outputs = net(batch_input)
         #Training loss
         loss = trainer.criterion(outputs, batch_output)
+        total_loss+=loss.item()
         #Backward and optimization
         trainer.optimizer.zero_grad()
         loss.backward()
         trainer.optimizer.step()
-        #plots on clearml
-        logger.report_scalar(title='Loss', series='loss', value=loss, iteration=epoch)
-        #Print all data on tensorboard
-        if trainer.tensorB:
-            writer.add_scalar('Loss/train', loss.item(), epoch)
-            for name, param in net.named_parameters():
-                writer.add_histogram(f'{name}/weights', param.data.cpu().numpy(), epoch)
-                writer.add_histogram(f'{name}/grads', param.grad.data.cpu().numpy(), epoch)
-    print(f'Epoch [{epoch+1}/{trainer.epochs}], Loss: {loss.item():.4f}')
+    
+    train_loss = total_loss / len(data_loader)
+    #plots on clearml
+    logger.report_scalar(title='Loss', series='loss', value=train_loss, iteration=epoch)
+    #Print all data on tensorboard
+    if trainer.tensorB:
+        writer.add_scalar('Loss/train', loss.item(), epoch)
+        for name, param in net.named_parameters():
+            writer.add_histogram(f'{name}/weights', param.data.cpu().numpy(), epoch)
+            writer.add_histogram(f'{name}/grads', param.grad.data.cpu().numpy(), epoch)
 
-#validateNet(tensor_test, tensor_target, net, trainer)
+
+    # Validation phase
+    net.eval()
+    with torch.no_grad():
+        total_loss = 0
+        for batch_input, batch_target in data_loader_test:
+            batch_input = moveTensorToDevice(batch_input, trainer.device)
+            batch_target = moveTensorToDevice(batch_target, trainer.device)
+
+            # Forward pass
+            outputs = net(batch_input)
+
+            # Calculate loss
+            lossVal = trainer.criterion(outputs, batch_target)
+            total_loss += lossVal.item()
+
+        # Calculate medium loss
+        val_loss = total_loss / len(data_loader_test)
+        
+        #
+        logger.report_scalar(title='Validation Loss', series='loss', value=val_loss, iteration=epoch)
+        if trainer.tensorB:
+            writer.add_scalar('Loss/validation', val_loss, epoch)
+            
+    # Return to train mode
+    net.train()
+    
+    print(f'Epoch [{epoch+1}/{trainer.epochs}], Train-Loss: {train_loss:.4f}, Validate-Loss: {val_loss:.4f}')
+

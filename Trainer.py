@@ -20,6 +20,8 @@ class Trainer:
         self.net = net
         #Train Criterion
         self.criterion = nn.MSELoss()
+        #self.criterion = nn.L1Loss()
+        #self.criterion = nn.HuberLoss()
 
         #Optimizer
         learning_rate = 0.001 #To see
