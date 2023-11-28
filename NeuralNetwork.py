@@ -40,17 +40,17 @@ class NeuralNetworkLayerMonk(nn.Module):
 
         #Layer 1 Input: 6 Output: 8
         self.layer1 = nn.Linear(6, 3)
-        #self.dropout1 = nn.Dropout(0.5)
+        self.dropout1 = nn.Dropout(0.5)
         self.bn1 = nn.BatchNorm1d(3)
         #Layer 2 Input: 64  Output: 32
         self.layer2 = nn.Linear(3, 1)
 
     def forward(self, x):
         x = self.layer1(x)
-        #x = self.dropout1(x)
+        x = self.dropout1(x)
         x = self.bn1(x)
-        #x = F.relu(x)
         x = self.layer2(x)
+        #x = F.sigmoid(x)
         return x
     
 

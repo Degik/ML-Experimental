@@ -1,7 +1,9 @@
 import torch
+import pandas as pd
 import Trainer as tr
 import parserData as prd
 import NeuralNetwork as nt
+import torch.nn.functional as F
 from plotFn import plotModel
 from clearml import Task
 from argumentParser import argumentParser
@@ -91,25 +93,41 @@ if trainer.tensorB:
     writer = nt.printGraph(net, tensor_tr_input.to(trainer.device))
 #Training loop
 for epoch in range(trainer.epochs):
+    #Loss
     total_loss = 0
+    #Accuracy
+    correct_preds = 0
+    total_preds = 0
     for batch_input, batch_output in data_loader_tr:
         batch_input = moveTensorToDevice(batch_input, trainer.device)
         batch_output = moveTensorToDevice(batch_output, trainer.device)
         #Forward pass
         outputs = net(batch_input)
+        batch_output = batch_output.squeeze()
         #Training loss
         loss = trainer.criterion(outputs, batch_output)
         total_loss+=loss.item()
+        #Calculate accuracy
+        #Outputs convert to binary 0 or 1 with P (Probability)
+        outputsConv = (F.sigmoid(outputs) >= 0.5).float()
+        _, predicted = torch.max(outputsConv.data, 1)
+        #batch_output = batch_output.squeeze()
+        total_preds += batch_output.size(0)
+        correct_preds += (predicted == batch_output).sum().item()
         #Backward and optimization
         trainer.optimizer.zero_grad()
         loss.backward()
         trainer.optimizer.step()
-    
+
+    #Accuracy
+    train_accuracy = 100 * correct_preds / total_preds
+    #Loss
     train_loss = total_loss / len(data_loader_tr)
     #Plots on clearml
     if trainer.clearml:
         logger.report_scalar(title='Training Metrics', series='Loss', value=loss.item(), iteration=epoch)
         logger.report_scalar(title='Training Metrics', series='Avg-Loss', value=train_loss, iteration=epoch)
+        logger.report_scalar(title='Training Metrics', series='Training-Accuracy', value=train_accuracy, iteration=epoch)
     #Print all data on tensorboard
     if trainer.tensorB:
         writer.add_scalar('Loss/train', loss.item(), epoch)
@@ -118,20 +136,60 @@ for epoch in range(trainer.epochs):
             writer.add_histogram(f'{name}/grads', param.grad.data.cpu().numpy(), epoch)
 
 
+    #Accuracy
+    correct_preds = 0
+    total_preds = 0
     # Validation phase
     net.eval()
     with torch.no_grad():
         total_loss = 0
+        #Creating list for save all data on clearml
+        if trainer.clearml:
+            all_predictions = []
+            all_targets = []
+        #
         for batch_input, batch_target in data_loader_ts:
             batch_input = moveTensorToDevice(batch_input, trainer.device)
             batch_target = moveTensorToDevice(batch_target, trainer.device)
 
             # Forward pass
             outputs = net(batch_input)
-
-            # Calculate loss
+            #Validation loss
+            batch_target = batch_target.squeeze()
             lossVal = trainer.criterion(outputs, batch_target)
             total_loss += lossVal.item()
+            #Calculate accuracy
+            #Outputs convert to binary 0 or 1 with P (Probability)
+            outputsConv = (F.sigmoid(outputs) >= 0.5).float()
+            _, predicted = torch.max(outputsConv.data, 1)
+            total_preds += batch_target.size() # (0)
+            #Convert batch_output
+            #batch_target = batch_target.squeeze()
+            #print("OUTPUT: ", batch_target)
+            #print("PRED: ", predicted)
+            #print(predicted == batch_target)
+            correct_preds += (predicted == batch_target).sum().item()
+
+            #Upload data  
+            if trainer.clearml:
+                #Take output and target for saving these on variables
+                predictions = outputsConv.cpu().detach().numpy()
+                targets = batch_target.cpu().numpy()
+                #Add result on list
+                all_predictions.extend(predictions)
+                all_targets.extend(targets)
+
+        #
+        if trainer.clearml:
+            all_predictions = [pred.flatten() for pred in all_predictions]  # Adatta questo in base alla struttura delle tue predizioni
+            all_targets = [target.flatten() for target in all_targets]
+            #Create DataFrame
+            comparison_df = pd.DataFrame({
+                'Target': all_targets,
+                'Prediction': all_predictions
+            })
+            logger.report_table(title='Prediction vs Target - Validation', series='Epoch {}'.format(epoch), iteration=epoch, table_plot=comparison_df)
+
 
         # Calculate medium loss
         val_loss = total_loss / len(data_loader_ts)
@@ -140,6 +198,7 @@ for epoch in range(trainer.epochs):
         if trainer.clearml:
             #logger.report_scalar(title='Training Metrics', series='Val-AvgLoss', value=lossVal.item(), iteration=epoch)
             logger.report_scalar(title='Training Metrics', series='Val-Loss', value=val_loss, iteration=epoch)
+            logger.report_scalar(title='Training Metrics', series='Validation-Accuracy', value=train_accuracy, iteration=epoch)
         if trainer.tensorB:
             writer.add_scalar('Loss/validation', val_loss, epoch)
             
@@ -148,4 +207,4 @@ for epoch in range(trainer.epochs):
     
     print(f'Epoch [{epoch+1}/{trainer.epochs}], Train-Loss: {train_loss:.4f}, Validate-Loss: {val_loss:.4f}')
 
-#plotModel(tensor_input,tensor_output, net, trainer) # Dind't work
+#plotModel(tensor_tr_input, tensor_tr_output, net, trainer) # Dind't work

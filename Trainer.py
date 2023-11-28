@@ -35,6 +35,7 @@ class Trainer:
             self.optimizer = optim.SGD(net.parameters(), lr=learning_rate)
         else:
             #Train Criterion
+            #self.criterion = nn.BCELoss()
             self.criterion = nn.MSELoss()
             #self.criterion = nn.L1Loss()
             #self.criterion = nn.HuberLoss()
